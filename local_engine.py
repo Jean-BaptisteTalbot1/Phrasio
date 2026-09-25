@@ -14,9 +14,25 @@ from pathlib import Path
 from typing import Callable, Optional
 
 # Stanza's atomic file-rename fails on Windows (WinError 5) when it tries to
-# update resources.json inside the argos packages directory. Disabling stanza
-# makes argostranslate fall back to its built-in MiniSBD sentence splitter.
-os.environ.setdefault("ARGOS_STANZA_AVAILABLE", "0")
+# update resources.json inside the argos packages directory. Patch os.replace so
+# that the rename falls back to copy+delete when the destination is locked.
+import sys
+os.environ["ARGOS_STANZA_AVAILABLE"] = "0"
+
+_real_replace = os.replace
+
+def _safe_replace(src, dst):
+    try:
+        _real_replace(src, dst)
+    except OSError:
+        import shutil
+        shutil.copy2(src, dst)
+        try:
+            os.remove(src)
+        except OSError:
+            pass
+
+os.replace = _safe_replace
 
 import numpy as np
 
