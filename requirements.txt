@@ -1,0 +1,5 @@
+customtkinter>=5.2
+lameenc>=1.7
+numpy
+piper-tts>=1.3
+argostranslate>=1.9
